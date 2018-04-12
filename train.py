@@ -16,16 +16,17 @@ IMG_DEPTH = 1
 
 # learning params
 learning_rate = 0.01
-num_epochs = 10
+num_epochs = 300
 batch_size = 10
 
 # Network params
 dropout_rate = 0.5
 num_classes = 6  # 0-折叠 2-压痕 3-划伤 4-结疤 5-氧化铁皮 6-黑斑
+MAX_STEP = 300
 train_layers = ['fc8', 'fc7', 'fc6']
 
 # How often we want to write the tf.summary data to disk
-display_step = 1
+display_step = 10
 
 is_use_ckpt = False
 
@@ -33,7 +34,7 @@ filewriter_path = '/tmp/tensorboard'
 checkpoint_path = '/tmp/'
 records_train_path = '/home/hexiang/data/1000/train1000.tfrecords'
 records_test_path = '/home/hexiang/data/1000/test1000.tfrecords'
-ckpt_path =''
+ckpt_path = '/tmp/'
 
 if not os.path.isdir(checkpoint_path):
     os.mkdir(checkpoint_path)
@@ -70,7 +71,7 @@ for gradient, var in gradients:
 tf.summary.scalar('cross_entropy', loss)
 
 
-# evaluation op
+# evaluation op...............................................
 with tf.name_scope('accuracy'):
     correct_pred = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 0))
     accurcy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
@@ -107,7 +108,58 @@ with tf.Session() as sess:
         model.load_initial_weights(sess)
         print('Load the pretrained weigths into the non-trainable layer')
 
+    coord = tf.train.Coordinator()
+    thread = tf.train.start_queue_runners(sess=sess, coord=coord)
+
     print('Start training')
+    for step in range(MAX_STEP):
+        train_batch_data, train_batch_labels = sess.run([img_batch, label_batch])
+        print(train_batch_data.shape, train_batch_labels)
+
+        print('step %d starts' % step)
+        start_time = datetime.now()
+        _, train_loss = sess.run([train_op, loss], feed_dict={x: train_batch_data,
+                                      y: train_batch_labels,
+                                      keep_prop: dropout_rate})
+
+        duration = datetime.now() - start_time
+
+        if step%display_step == 0:
+            s = sess.run(merged_summary_op, feed_dict={x: train_batch_data,
+                                          y: train_batch_labels,
+                                          keep_prop: 1})
+            writer.add_summary(s, step)
+
+        print('%s: step %d, loss = %.4f (%.3f seconds)') % (datetime.now(), step, train_loss, duration)
+
+        if (step+1)%300 == 0 or step+1 == MAX_STEP:
 
 
+            print('Test the model on the entire test_set')
+            img_test, label_test = read_and_decode(records_test_path, IMG_HEIGHT, IMG_WIDTH)
+            img_test_batch, label_test_batch = tf.train.shuffle_batch([img_test, label_test],
+                                                                    batch_size=batch_size, capacity=100,
+                                                                    min_after_dequeue=10)
 
+            test_acc = 0.
+            test_count = 0
+
+            for _ in range(50):  # 500图片
+                test_batch_data, test_batch_labels = sess.run([img_test_batch, label_test_batch])
+
+                acc = sess.run(accurcy, feed_dict={x: test_batch_data,
+                                                   y:test_batch_labels,
+                                                   keep_prop: 1.})
+                test_acc += acc
+                test_count += 1
+            test_acc /= test_count
+            print('test accuracy = .4f%' % test_acc)
+
+            print('{} Saving checkpoint of model...'.format(datetime.now()))
+            checkpoint_name = os.path.join(checkpoint_path, 'model_step'+str(step)+'ckpt')
+            save_path = saver.save(sess, checkpoint_name)
+            print('{} Model checkpoint is saved at {}'.format(datetime.now(), checkpoint_name))
+
+        coord.request_stop()
+        coord.join(thread)
+        print('End of training')
