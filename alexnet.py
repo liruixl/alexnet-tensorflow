@@ -33,29 +33,33 @@ class AlexNet(object):
 
     def create(self):
         # 1st Layer: Conv (w ReLu) -> Lrn -> Pool
-        conv1 = conv(self.X, 11, 11, 96, 4, 4, padding='VALID', name='conv1')
-        norm1 = lrn(conv1, 2, 2e-05, 0.75, name='norm1')
-        pool1 = max_pool(norm1, 3, 3, 2, 2, padding='VALID', name='pool1')
+        self.conv1 = conv(self.X, 11, 11, 96, 4, 4, padding='VALID', name='conv1')
+        norm1 = lrn(self.conv1, 2, 2e-05, 0.75, name='norm1')
+        self.pool1 = max_pool(norm1, 3, 3, 2, 2, padding='VALID', name='pool1')
         
         # 2nd Layer: Conv (w ReLu)  -> Lrn -> Pool with 2 groups
-        conv2 = conv(pool1, 5, 5, 256, 1, 1, groups=2, name='conv2')
-        norm2 = lrn(conv2, 2, 2e-05, 0.75, name='norm2')
-        pool2 = max_pool(norm2, 3, 3, 2, 2, padding='VALID', name='pool2')
+        self.conv2 = conv(self.pool1, 5, 5, 256, 1, 1, groups=2, name='conv2')
+        norm2 = lrn(self.conv2, 2, 2e-05, 0.75, name='norm2')
+        self.pool2 = max_pool(norm2, 3, 3, 2, 2, padding='VALID', name='pool2')
         
         # 3rd Layer: Conv (w ReLu)
-        conv3 = conv(pool2, 3, 3, 384, 1, 1, name='conv3')
+        self.conv3 = conv(self.pool2, 3, 3, 384, 1, 1, name='conv3')
 
         # 4th Layer: Conv (w ReLu) splitted into two groups
-        conv4 = conv(conv3, 3, 3, 384, 1, 1, groups=2, name='conv4')
+        self.conv4 = conv(self.conv3, 3, 3, 384, 1, 1, groups=2, name='conv4')
 
         # 5th Layer: Conv (w ReLu) -> Pool splitted into two groups
-        conv5 = conv(conv4, 3, 3, 256, 1, 1, groups=2, name='conv5')
-        pool5 = max_pool(conv5, 3, 3, 2, 2, padding='VALID', name='pool5')
+        self.conv5 = conv(self.conv4, 3, 3, 256, 1, 1, groups=2, name='conv5')
+        self.pool5 = max_pool(self.conv5, 3, 3, 2, 2, padding='VALID', name='pool5')
 
         # 6th Layer: Flatten -> FC (w ReLu) -> Dropout
-        flattened = tf.reshape(pool5, [-1, 6*6*256])
-        fc6 = fc(flattened, 6*6*256, 4096, name='fc6')
-        dropout6 = dropout(fc6, self.KEEP_PROB)
+        # flattened = tf.reshape(self.pool5, [-1, 6*6*256])
+        # self.fc6 = fc(flattened, 6*6*256, 4096, name='fc6')
+        # dropout6 = dropout(self.fc6, self.KEEP_PROB)
+
+        flattened = tf.reshape(self.pool5, [int(self.pool5.get_shape()[0]), -1])
+        self.fc6 = fc(flattened, int(flattened.get_shape()[-1]), 4096, name='fc6')
+        dropout6 = dropout(self.fc6, self.KEEP_PROB)
 
         # 7th Layer: FC (w ReLu) -> Dropout
         fc7 = fc(dropout6, 4096, 4096, name='fc7')
