@@ -83,6 +83,7 @@ class AlexNet(object):
 
                     # Assign weights/biases to their corresponding tf variable
                     for data in weights_dict[op_name]:
+                        print('s% 不去训练' % weights_dict[op_name])
 
                         # Biases
                         if len(data.shape) == 1:

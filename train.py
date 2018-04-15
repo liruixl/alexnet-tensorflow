@@ -15,12 +15,12 @@ IMG_WIDTH = 224
 IMG_DEPTH = 1
 
 # learning params
-learning_rate = 0.01
+learning_rate = 0.001
 num_epochs = 300
 batch_size = 10
 
 # Network params
-dropout_rate = 0.5
+dropout_rate = 0.9
 num_classes = 6  # 0-折叠 2-压痕 3-划伤 4-结疤 5-氧化铁皮 6-黑斑
 MAX_STEP = 300
 train_layers = ['conv1','conv2', 'conv3', 'conv4', 'conv5','fc8', 'fc7', 'fc6']
@@ -53,6 +53,8 @@ logits = model.fc8
 
 # the list of trainable variables of the layers we want to train
 var_list = [v for v in tf.trainable_variables() if v.name.split('/')[0] in train_layers]
+print('训练:')
+print(var_list)
 
 with tf.name_scope('cross_ent'):
     cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y, logits=logits, name='xentropy')
@@ -62,10 +64,14 @@ with tf.name_scope('cross_ent'):
 with tf.name_scope('train'):
     gradients = tf.gradients(ys=loss, xs=var_list)
     gradients = list(zip(gradients, var_list))
+    print('梯度:')
+    print(gradients)
 
-# Creat optimizer and apply gradient descent to the trainable variables
-optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate, momentum=0.9)
-train_op = optimizer.apply_gradients(grads_and_vars=gradients)
+    # Creat optimizer and apply gradient descent to the trainable variables
+    #optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate, momentum=0.9)
+    #train_op = optimizer.apply_gradients(grads_and_vars=gradients)
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate)
+    train_op = optimizer.minimize(loss)
 
 # 梯度的直方图
 for gradient, var in gradients:
@@ -76,9 +82,11 @@ tf.summary.scalar('cross_entropy', loss)
 
 # evaluation op...............................................
 with tf.name_scope('accuracy'):
-    correct_pred = tf.equal(tf.argmax(logits, 1), y)
-    accurcy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
-tf.summary.scalar('accuracy', accurcy)
+    #correct_pred = tf.equal(tf.argmax(logits, 1), tf.to_int64(y))
+    #accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+    correct = tf.nn.in_top_k(logits, y, 1)
+    accuracy = tf.reduce_sum(tf.cast(correct, tf.int32))
+tf.summary.scalar('accuracy', accuracy)
 
 merged_summary_op = tf.summary.merge_all()
 
@@ -98,7 +106,7 @@ img_batch, label_batch = tf.train.shuffle_batch([img, label],
 # 测试集
 img_test, label_test = read_and_decode(records_test_path, IMG_HEIGHT, IMG_WIDTH)
 img_test_batch, label_test_batch = tf.train.shuffle_batch([img_test, label_test],
-                                                                    batch_size=batch_size, capacity=100,
+                                                                    batch_size=batch_size, capacity=500,
                                                                     min_after_dequeue=10)
 init = tf.global_variables_initializer()
 
@@ -107,14 +115,14 @@ with tf.Session() as sess:
     print('initialize all global variables')
 
     writer.add_graph(sess.graph)
-    # summary_writer = tf.summary.FileWriter(train_event_dir, sess.graph)
+    # summary_writer = tf.summary.FileWriter(train_event_dir, sess.graph) 也可以写在这里
 
     if is_use_ckpt is True:
         # 路径未定义
         saver.restore(sess, ckpt_path)
         print('Restore from checkpoint...')
     else:
-        #model.load_initial_weights(sess)
+        model.load_initial_weights(sess)
         print('Load the pretrained weigths into the non-trainable layer')
 
     coord = tf.train.Coordinator()
@@ -149,21 +157,22 @@ with tf.Session() as sess:
             print('{} Model checkpoint is saved at {}'.format(datetime.now(), checkpoint_name))
 
             print('Test the model on the entire test_set')
-            test_acc = 0.
+            test_correct = 0
             test_count = 0
 
             for _ in range(50):  # 500图片
                 test_batch_data, test_batch_labels = sess.run([img_test_batch, label_test_batch])
 
-                acc = sess.run(accurcy, feed_dict={x: test_batch_data,
+                acc = sess.run(accuracy, feed_dict={x: test_batch_data,
                                                    y: test_batch_labels,
                                                    keep_prop: 1.})
-                test_acc += acc
-                test_count += 1
-            test_acc /= test_count
-            print('test accuracy = %.3f' % test_acc)
+                test_correct += acc
+                test_count += 10
+            test_acc = float(test_correct)/test_count
+            print('All examples: %d Correct: %d test accuracy = %.4f' % (test_count, test_correct, test_acc))
 
 
     coord.request_stop()
     coord.join(thread)
     print('End of training')
+
