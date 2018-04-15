@@ -10,31 +10,31 @@ Configuration setting
 '''
 
 # image info
-IMG_HEIGHT = 224
-IMG_WIDTH = 224
+IMG_HEIGHT = 300
+IMG_WIDTH = 300
 IMG_DEPTH = 1
 
 # learning params
 learning_rate = 0.001
 num_epochs = 300
-batch_size = 10
+batch_size = 5
 
 # Network params
-dropout_rate = 0.9
-num_classes = 6  # 0-折叠 2-压痕 3-划伤 4-结疤 5-氧化铁皮 6-黑斑
-MAX_STEP = 300
+dropout_rate = 0.8
+num_classes = 6  # 1-折叠 2-压痕 3-划伤 4-结疤 5-氧化铁皮 6-黑斑
+MAX_STEP = 3000
 train_layers = ['conv1','conv2', 'conv3', 'conv4', 'conv5','fc8', 'fc7', 'fc6']
 
 # How often we want to write the tf.summary data to disk
 display_step = 10
 
-is_use_ckpt = True
-ckpt_path = '/tmp/ckpt/model_step299ckpt'
+is_use_ckpt = False
+ckpt_path = '/home/hexiang/data/tflogs/ckpt/model_step299ckpt'
 
-filewriter_path = '/tmp/tensorboard'
-checkpoint_path = '/tmp/ckpt'
-records_train_path = '/home/hexiang/data/224/train224.tfrecords'
-records_test_path = '/home/hexiang/data/224/test224.tfrecords'
+filewriter_path = '/home/hexiang/data/tflogs/tensorboard300'
+checkpoint_path = '/home/hexiang/data/tflogs/ckpt300'
+records_train_path = '/home/hexiang/data/1000/train1000.tfrecords'
+records_test_path = '/home/hexiang/data/1000/test1000.tfrecords'
 
 
 if not os.path.isdir(checkpoint_path):
@@ -68,9 +68,9 @@ with tf.name_scope('train'):
     print(gradients)
 
     # Creat optimizer and apply gradient descent to the trainable variables
-    #optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate, momentum=0.9)
+    optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate, momentum=0.9)
     #train_op = optimizer.apply_gradients(grads_and_vars=gradients)
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate)
+    #optimizer = tf.train.GradientDescentOptimizer(learning_rate)
     train_op = optimizer.minimize(loss)
 
 # 梯度的直方图

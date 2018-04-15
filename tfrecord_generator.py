@@ -65,7 +65,9 @@ def read_and_decode(filename, height, width):
                                        })
 
     img = tf.decode_raw(features['img_raw'], tf.uint8)
-    img = tf.reshape(img, [height, width, 1])
+    img = tf.reshape(img, [1000, 1000, 1])
+    # 这里可以加入图像预处理
+    img = tf.image.resize_images(img, [height, width], method=0)
     img = tf.cast(img, tf.float32) * (1. / 255) - 0.5
     label = tf.cast(features['label'], tf.int32)
 
