@@ -9,32 +9,32 @@ from tfrecord_generator import read_and_decode
 Configuration setting
 '''
 
-# image info
-IMG_HEIGHT = 300
-IMG_WIDTH = 300
+# image info 300->minibatch 5  224->minibatch 10
+IMG_HEIGHT = 224
+IMG_WIDTH = 224
 IMG_DEPTH = 1
 
 # learning params
-learning_rate = 0.001
-num_epochs = 300
-batch_size = 5
+learning_rate = 0.000001
+num_epochs = 20
+batch_size = 15
 
 # Network params
-dropout_rate = 0.8
+dropout_rate = 0.5
 num_classes = 6  # 1-折叠 2-压痕 3-划伤 4-结疤 5-氧化铁皮 6-黑斑
-MAX_STEP = 3000
+MAX_STEP = 400
 train_layers = ['conv1','conv2', 'conv3', 'conv4', 'conv5','fc8', 'fc7', 'fc6']
 
 # How often we want to write the tf.summary data to disk
 display_step = 10
 
-is_use_ckpt = False
-ckpt_path = '/home/hexiang/data/tflogs/ckpt/model_step299ckpt'
+is_use_ckpt = True
+ckpt_path = '/home/hexiang/data/tflogs/ckpt300/model2_step7999ckpt'
 
 filewriter_path = '/home/hexiang/data/tflogs/tensorboard300'
 checkpoint_path = '/home/hexiang/data/tflogs/ckpt300'
-records_train_path = '/home/hexiang/data/1000/train1000.tfrecords'
-records_test_path = '/home/hexiang/data/1000/test1000.tfrecords'
+records_train_path = '/home/hexiang/data/224/train224.tfrecords'
+records_test_path = '/home/hexiang/data/224/test224.tfrecords'
 
 
 if not os.path.isdir(checkpoint_path):
@@ -129,7 +129,7 @@ with tf.Session() as sess:
     thread = tf.train.start_queue_runners(sess=sess, coord=coord)
 
     print('{} Start training'.format(datetime.now()))
-    for step in range(MAX_STEP):
+    for step in range(MAX_STEP*num_epochs):
         train_batch_data, train_batch_labels = sess.run([img_batch, label_batch])
         print(train_batch_data.shape, train_batch_labels)
 
@@ -149,7 +149,7 @@ with tf.Session() as sess:
 
         print('%s: step %d, loss = %.4f (%s seconds)' % (datetime.now(), step, train_loss, duration))
 
-        if (step+1)%300 == 0 or step+1 == MAX_STEP:
+        if (step+1)%MAX_STEP == 0 or step+1 == MAX_STEP:
 
             print('{} Saving checkpoint of model...'.format(datetime.now()))
             checkpoint_name = os.path.join(checkpoint_path, 'model_step' + str(step) + 'ckpt')
@@ -160,7 +160,7 @@ with tf.Session() as sess:
             test_correct = 0
             test_count = 0
 
-            for _ in range(50):  # 500图片
+            for _ in range(34):  # 347测试图片
                 test_batch_data, test_batch_labels = sess.run([img_test_batch, label_test_batch])
 
                 acc = sess.run(accuracy, feed_dict={x: test_batch_data,
@@ -169,8 +169,7 @@ with tf.Session() as sess:
                 test_correct += acc
                 test_count += 10
             test_acc = float(test_correct)/test_count
-            print('All examples: %d Correct: %d test accuracy = %.4f' % (test_count, test_correct, test_acc))
-
+            print('All examples: %d Correct: %d test accuracy = %.6f' % (test_count, test_correct, test_acc))
 
     coord.request_stop()
     coord.join(thread)

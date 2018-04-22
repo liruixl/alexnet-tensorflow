@@ -5,7 +5,7 @@ import argparse
 import tensorflow as tf
 
 
-TFRECORDS_NAME = "/home/hexiang/data/1000/test1000.tfrecords"
+TFRECORDS_NAME = "/home/hexiang/data/224/train224.tfrecords"
 IMG_HEIGHT = 1000
 IMG_WIDTH = 1000
 IMG_DEPTH = 1
@@ -34,12 +34,12 @@ def creat_tfrecords(data_path):
                 im = im.convert('L')
                 print('convert %s to L mode' % img_name)
 
-            box = (12, 0, 1012, 1000)
-            img_crop = im.crop(box)
+            # box = (12, 0, 1012, 1000)
+            # img_crop = im.crop(box)
 
             # img_resized = img_crop.resize((224, 224))
 
-            img_raw = img_crop.tobytes()  # 原生bytes
+            img_raw = im.tobytes()  # 原生bytes
             feature = {
                 "label": tf.train.Feature(int64_list=tf.train.Int64List(value=[index])),
                 'img_raw': tf.train.Feature(bytes_list=tf.train.BytesList(value=[img_raw]))
@@ -65,10 +65,10 @@ def read_and_decode(filename, height, width):
                                        })
 
     img = tf.decode_raw(features['img_raw'], tf.uint8)
-    img = tf.reshape(img, [1000, 1000, 1])
+    img = tf.reshape(img, [224, 224, 1])
     # 这里可以加入图像预处理
-    img = tf.image.resize_images(img, [height, width], method=0)
-    img = tf.cast(img, tf.float32) * (1. / 255) - 0.5
+    # img = tf.image.resize_images(img, [height, width], method=0)
+    img = tf.cast(img, tf.float32) * (1. / 255)  # 除去 减0.5
     label = tf.cast(features['label'], tf.int32)
 
     return img, label
@@ -76,7 +76,7 @@ def read_and_decode(filename, height, width):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--datapath', default=r'/home/hexiang/data/AllSample/test_set', type=str,
+    parser.add_argument('--datapath', default=r'/home/hexiang/data/set/train_set', type=str,
                         help='the dictionary of train or test data')
     # parser.add_argument('--datapath', default=r'/home/hexiang/data/AllSample/train_set', type=str, help='the dictionary of train or test data')
     args, unparsed = parser.parse_known_args()

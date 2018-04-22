@@ -6,7 +6,7 @@ from PIL import Image
 import numpy as np
 import argparse
 
-save_path = '/home/hexiang/data/tflogs/ckpt/model_step299ckpt'
+save_path = '/home/hexiang/data/tflogs/ckpt300/model_step599ckpt'
 
 classes_name = ['折叠', '压痕', '划伤', '结疤', '氧化铁皮', '黑斑']
 NUM_CLASSES = 6
@@ -15,8 +15,8 @@ NUM_CLASSES = 6
 def test_one_image(img_path):
     im_arr = load_and_process_one_image(img_path)
     im_tensor = tf.convert_to_tensor(im_arr)
-    im_tensor = tf.reshape(im_tensor, [1, 224, 224, 1])
-    im_tensor = tf.cast(im_tensor, tf.float32) * (1. / 255) - 0.5
+    im_tensor = tf.reshape(im_tensor, [1, 300, 300, 1])
+    im_tensor = tf.cast(im_tensor, tf.float32) * (1. / 255)
 
     model = AlexNet(im_tensor, 1., NUM_CLASSES, skip_layer='')
     output = model.fc8
@@ -36,7 +36,7 @@ def test_one_image(img_path):
     return probable
 
 
-def load_and_process_one_image(img_path, target_h=224, target_w=224):
+def load_and_process_one_image(img_path, target_h=300, target_w=300):
     if not is_img(img_path):
         raise Exception('路径目标对象不是图片')
 
