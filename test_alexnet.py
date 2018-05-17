@@ -85,3 +85,4 @@ with tf.Session() as sess:
 
     print(pool5, logits)
     print(l)
+
