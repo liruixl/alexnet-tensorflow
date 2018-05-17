@@ -14,7 +14,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         self.img_path = r'C:\Users\qazwsx\Desktop\GUI\D2_M_570528_00030.jpg'
         self.img_dir = r''
-        self.txt_path = r'C:\Users\qazwsx\Desktop\testUI\result.txt'
+        self.txt_path = ''
         self.model_path = ''
         self.initUI()
 
@@ -85,10 +85,10 @@ class MainWindow(QMainWindow):
         loglabel = QLabel('信息')
         self.logEdit = QTextEdit()
         self.logEdit.setReadOnly(True)
-        size = self.logEdit.sizeHint()
-        print(size)
-        size.setHeight(size.height() - 100)
-        self.logEdit.setBaseSize(size)
+        # size = self.logEdit.sizeHint()
+        # print(size)
+        # size.setHeight(size.height() - 100)
+        # self.logEdit.setBaseSize(size)
         
 
         self.loglayout.addWidget(loglabel)
@@ -101,6 +101,9 @@ class MainWindow(QMainWindow):
                         statusTip="Open an img", triggered=self.open)
         self.openDirAct = QAction("&打开文件夹", self, 
                         statusTip="Open a dir of images", triggered=self.open)
+        self.saveAct = QAction( "&保存", self,
+                shortcut=QKeySequence.Save,
+                statusTip="Save the recognition result to disk", triggered=self.save)
         self.saveAsAct = QAction("保存为...", self,
                                 shortcut=QKeySequence.SaveAs,
                                 statusTip="Save the defect info",
@@ -123,6 +126,7 @@ class MainWindow(QMainWindow):
         fileMenu = menubar.addMenu('文件')
         fileMenu.addAction(self.openAct)
         fileMenu.addAction(self.openDirAct)
+        fileMenu.addAction(self.saveAct)
         fileMenu.addAction(self.saveAsAct)
         fileMenu.addSeparator()
         fileMenu.addAction(self.exitAct)
@@ -135,8 +139,27 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage("Ready")
         
     def open(self):
-        pixMap = QPixmap(self.img_path)
-        self.imglabel.setPixmap(pixMap)
+        # 里面的参数具体是 题目 初始路径 后缀过滤
+        fname = QFileDialog.getOpenFileName(self, '选取钢板图片', 'C:\\', 
+                                            "Image File(*.jpg *.png *.tif)") 
+
+        if fname[0]:
+            self.img_path = fname[0]
+            pixMap = QPixmap(self.img_path)
+            self.imglabel.setPixmap(pixMap)
+    
+
+    def save(self):
+        if self.txt_path:
+            return self.saveFile(self.curFile)
+        return self.saveAs()
+
+    def saveAs(self):
+        fileName, _ = QFileDialog.getSaveFileName(self)
+        if fileName:
+            return self.saveFile(fileName)
+
+        return False
     
     # 保存为.txt或者.csv
     # QFile file( fileName ); // 把文本写入到文件中
@@ -145,21 +168,23 @@ class MainWindow(QMainWindow):
     #     ts << textEdit->text();
     #     textEdit->setModified( FALSE );
     # }
-    def saveAs(self):
+    def saveFile(self, file_name):
         print(self.bigEditor.toPlainText())
-        qfile = QFile(self.txt_path)
+        qfile = QFile(file_name)
         if not qfile.open(QFile.WriteOnly | QFile.Text):
             QMessageBox.warning(self, "Application",
-                    "Cannot write file %s:\n%s." % (self.txt_path.split('\\')[-1], qfile.errorString()))
+                    "Cannot write file %s:\n%s." % (file_name.split('\\')[-1], qfile.errorString()))
             return False
 
         outf = QTextStream(qfile)
         
         outf << self.bigEditor.toPlainText()
+        self.setCurrentFile(file_name)
 
-        self.statusBar().showMessage("File %s saved" % self.txt_path)
-
-        # f = open(self.txt_path, 'a')
+        self.statusBar().showMessage("File %s saved" % file_name)
+        
+        # 用python也可以
+        # f = open(file_name, 'a')
         # f.write('\n')
         # f.write(self.bigEditor.toPlainText())
         # f.close()
@@ -179,6 +204,19 @@ class MainWindow(QMainWindow):
         pro, defect_name = 1, "haha"
         # self.bigEditor.setPlainText()
         self.bigEditor.append('%s,%s,%s' % (self.img_path.split('\\')[-1], pro, defect_name))
+
+    def setCurrentFile(self, fileName):
+        self.txt_path = fileName
+        # self.bigEditor.document().setModified(False)
+        # self.setWindowModified(False)
+
+        # if self.curFile:
+        #     shownName = self.strippedName(self.curFile)
+        # else:
+        #     shownName = 'untitled.txt'
+
+        # self.setWindowTitle("%s[*] - Application" % shownName)
+    
 
 
 
