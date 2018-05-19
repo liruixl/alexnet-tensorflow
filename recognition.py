@@ -6,7 +6,7 @@ from PIL import Image
 import numpy as np
 import argparse
 
-save_path = '/home/hexiang/data/tflogs/ckpt300/model_step599ckpt'
+save_path = '/home/hexiang/data/tflogs/ckpt300/model_step399ckpt'
 
 classes_name = ['折叠', '压痕', '划伤', '结疤', '氧化铁皮', '黑斑']
 NUM_CLASSES = 6
@@ -15,7 +15,7 @@ NUM_CLASSES = 6
 def test_one_image(img_path):
     im_arr = load_and_process_one_image(img_path)
     im_tensor = tf.convert_to_tensor(im_arr)
-    im_tensor = tf.reshape(im_tensor, [1, 300, 300, 1])
+    im_tensor = tf.reshape(im_tensor, [1, 224, 224, 1])
     im_tensor = tf.cast(im_tensor, tf.float32) * (1. / 255)
 
     model = AlexNet(im_tensor, 1., NUM_CLASSES, skip_layer='')
@@ -33,10 +33,10 @@ def test_one_image(img_path):
 
         probable = sess.run(max)[0]
 
-    return probable
+    return probable, classes_name[probable]
 
 
-def load_and_process_one_image(img_path, target_h=300, target_w=300):
+def load_and_process_one_image(img_path, target_h=224, target_w=224):
     if not is_img(img_path):
         raise Exception('路径目标对象不是图片')
 
@@ -54,7 +54,7 @@ def load_and_process_one_image(img_path, target_h=300, target_w=300):
         im1 = im.crop((left, top, right, bottom))
         # print(im1.size)
     else:
-        im1 = im.resize(target_w, target_h)
+        im1 = im.resize((target_w, target_h))
 
     image_arr = np.array(im1)
     return image_arr
@@ -66,8 +66,8 @@ def is_img(img_path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--img_path', default=r'/home/hexiang/data/AllSample/train_set/2/D1_M_1457_02282.tif', type=str,
+    parser.add_argument('--img_path', default=r'/home/hexiang/data/set/test_set/1/D2_M_707467_00119.jpg', type=str,
                         help='the path of image to recognition')
     args, unparsed = parser.parse_known_args()
-    prob = test_one_image(args.img_path)
-    print('class %d: %s'%(prob, classes_name[prob]))
+    prob,_ = test_one_image(args.img_path)
+    print('class %d: %s'%(prob+1, classes_name[prob]))

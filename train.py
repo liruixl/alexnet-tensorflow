@@ -1,8 +1,8 @@
 
 import os
 import tensorflow as tf
-from datetime import  datetime
-from alexnet import  AlexNet
+from datetime import datetime
+from alexnet import AlexNet
 from tfrecord_generator import read_and_decode
 
 '''
@@ -16,7 +16,7 @@ IMG_DEPTH = 1
 
 # learning params
 learning_rate = 0.000001
-num_epochs = 20
+num_epochs = 2
 batch_size = 15
 
 # Network params
@@ -29,7 +29,12 @@ train_layers = ['conv1','conv2', 'conv3', 'conv4', 'conv5','fc8', 'fc7', 'fc6']
 display_step = 10
 
 is_use_ckpt = True
-ckpt_path = '/home/hexiang/data/tflogs/ckpt300/model2_step7999ckpt'
+ckpt_path = '/home/hexiang/data/tflogs/ckpt300/model2_step7999ckpt'  # model1/2 保证迭代训练
+'''
+Model checkpoint is saved at /home/hexiang/data/tflogs/ckpt300/model_step399ckpt
+Test the model on the entire test_set
+All examples: 340 Correct: 326 test accuracy = 0.958824
+'''
 
 filewriter_path = '/home/hexiang/data/tflogs/tensorboard300'
 checkpoint_path = '/home/hexiang/data/tflogs/ckpt300'
@@ -147,7 +152,7 @@ with tf.Session() as sess:
                                           keep_prop: 1})
             writer.add_summary(s, step)
 
-        print('%s: step %d, loss = %.4f (%s seconds)' % (datetime.now(), step, train_loss, duration))
+        print('%s: step %d, loss = %.5f (%s seconds)' % (datetime.now(), step, train_loss, duration))
 
         if (step+1)%MAX_STEP == 0 or step+1 == MAX_STEP:
 
