@@ -7,6 +7,9 @@ from PyQt5.QtWidgets import (QMainWindow, QTextEdit, QAction, QLineEdit,
                             QSlider)
 from PyQt5.QtGui import QIcon, QKeySequence, QPixmap
 from PyQt5.QtCore import Qt, QFile, QDataStream, QIODevice, QTextStream
+
+from recognition import test_one_image, test_one_dir
+import re
 import os
 
 # from recognition import test_one_image
@@ -55,7 +58,8 @@ class MainWindow(QMainWindow):
         self.imglabel = QLabel()
         self.imglabel.setAlignment(Qt.AlignHCenter)
         self.imgBox = QGroupBox("defect image")
-        self.imglabel.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
+        self.imgBox.setAlignment(Qt.AlignHCenter)
+        # self.imglabel.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
 
         layout = QVBoxLayout()
 
@@ -159,21 +163,23 @@ class MainWindow(QMainWindow):
         
     def open(self):
         # 里面的参数具体是 题目 初始路径 后缀过滤
-        fname = QFileDialog.getOpenFileName(self, '选取钢板图片', 'C:\\', 
-                                            "Image File(*.jpg *.png *.tif)") 
+        # fname = QFileDialog.getOpenFileName(self, '选取钢板图片', 'C:\\',
+        #                                     "Image File(*.jpg *.png *.tif)")
+        fname = QFileDialog.getOpenFileName(self, '选取钢板图片', '/home',
+                                            "Image File(*.jpg *.png *.tif)")
 
         if fname[0]:
             self.img_path = fname[0]
             pixMap = QPixmap(self.img_path)
             self.imglabel.setPixmap(pixMap)
         self.is_dir = False
-        self.logEdit.append('已打开图片 %s, 请点击识别<b>按钮</b>开始识别' % fname)
+        self.logEdit.append('已打开图片 %s, 请点击识别<b>按钮</b>开始识别' % str(fname))
     
     def open_dir(self):
-        dir_name = QFileDialog.getExistingDirectory(self, '选取文件夹', 'C:/')
+        dir_name = QFileDialog.getExistingDirectory(self, '选取文件夹', '/home')
         self.img_dir = dir_name
         self.is_dir = True
-        self.logEdit.append('已选取文件夹 %s, 请点击识别<b>按钮</b>开始识别' % dir_name)
+        self.logEdit.append('已选取文件夹 %s, 请点击识别<b>按钮</b>开始识别' % str(dir_name))
 
 
 
@@ -195,7 +201,7 @@ class MainWindow(QMainWindow):
         qfile = QFile(file_name)
         if not qfile.open(QFile.WriteOnly | QFile.Text):
             QMessageBox.warning(self, "Application",
-                    "Cannot write file %s:\n%s." % (file_name.split('\\')[-1], qfile.errorString()))
+                    "Cannot write file %s:\n%s." % re.split('\\ | /',file_name)[-1], qfile.errorString())
             return False
 
         outf = QTextStream(qfile)
@@ -210,6 +216,7 @@ class MainWindow(QMainWindow):
         # f.write('\n')
         # f.write(self.bigEditor.toPlainText())
         # f.close()
+
     def closeEvent(self, event):
         event.accept()
     
@@ -222,18 +229,17 @@ class MainWindow(QMainWindow):
         pass
 
     def recognition(self):
+        # 有线程问题 识别完成后模型的初始化还在,下一次识别报错
         if self.is_dir:
-            img_list = os.listdir(self.img_dir)
-            for i in img_list:
-                p = os.path.join(img_list, i)
-                # pro, defect_name = test_one_image(p)
-                pro, defect_name = 2, "文件夹"
-                self.bigEditor.append('%s,%s,%s' % (p.split('\\')[-1], pro, defect_name))
+            result = test_one_dir(self.img_dir)
+            for k, v in result.items():
+                self.bigEditor.append('%s,%s,%s' % (re.split('\\ | /', k)[-1], v[0], v[1]))
         else:
-            # pro, defect_name = test_one_image(self.img_path)
-            pro, defect_name = 1, "haha"
+            print(self.img_path)
+            pro, defect_name = test_one_image(self.img_path)
+            # pro, defect_name = 1, "haha"
             # self.bigEditor.setPlainText()
-            self.bigEditor.append('%s,%s,%s' % (self.img_path.split('\\')[-1], pro, defect_name))
+            self.bigEditor.append('%s,%s,%s' % (re.split('\\ | /', self.img_path)[-1], pro+1, defect_name))
 
     def clear_result(self):
         self.bigEditor.clear()

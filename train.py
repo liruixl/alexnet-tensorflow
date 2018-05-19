@@ -34,10 +34,14 @@ ckpt_path = '/home/hexiang/data/tflogs/ckpt300/model2_step7999ckpt'  # model1/2 
 Model checkpoint is saved at /home/hexiang/data/tflogs/ckpt300/model_step399ckpt
 Test the model on the entire test_set
 All examples: 340 Correct: 326 test accuracy = 0.958824
+
+odel checkpoint is saved at /home/hexiang/data/tflogs/ckpt0219/model_step399ckpt
+Test the model on the entire test_set
+All examples: 340 Correct: 335 test accuracy = 0.985294
 '''
 
-filewriter_path = '/home/hexiang/data/tflogs/tensorboard300'
-checkpoint_path = '/home/hexiang/data/tflogs/ckpt300'
+filewriter_path = '/home/hexiang/data/tflogs/tensorboard0219'
+checkpoint_path = '/home/hexiang/data/tflogs/ckpt0219_2'
 records_train_path = '/home/hexiang/data/224/train224.tfrecords'
 records_test_path = '/home/hexiang/data/224/test224.tfrecords'
 
@@ -172,7 +176,7 @@ with tf.Session() as sess:
                                                    y: test_batch_labels,
                                                    keep_prop: 1.})
                 test_correct += acc
-                test_count += 10
+                test_count += batch_size
             test_acc = float(test_correct)/test_count
             print('All examples: %d Correct: %d test accuracy = %.6f' % (test_count, test_correct, test_acc))
 
