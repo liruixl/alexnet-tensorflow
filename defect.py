@@ -21,11 +21,16 @@ import os
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
-        self.img_path = r'C:\Users\qazwsx\Desktop\GUI\D2_M_570528_00030.jpg'
-        self.img_dir = r''
+        self.img_path = ''
+        self.img_dir = ''
+
         self.is_dir = False
-        self.txt_path = ''
+
+        self.txt_path = ''  # 文件保存路径
+        self.isModified = False
+
         self.model_path = ''
+
         self.initUI()
 
     def initUI(self):
@@ -51,7 +56,6 @@ class MainWindow(QMainWindow):
         mainwidget.setLayout(main_layout)
         self.setCentralWidget(mainwidget)
 
-
         self.setGeometry(300, 100, 700, 500)
         self.setWindowTitle('缺陷识别')
 
@@ -60,7 +64,7 @@ class MainWindow(QMainWindow):
     # 图片显示区
     def creatImgLabel(self):
         self.imglabel = QLabel()
-        self.imglabel.setAlignment(Qt.AlignHCenter)
+        self.imglabel.setAlignment(Qt.AlignCenter)
         self.imgBox = QGroupBox("defect image")
         self.imgBox.setAlignment(Qt.AlignHCenter)
         # self.imglabel.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
@@ -193,9 +197,9 @@ class MainWindow(QMainWindow):
         return self.saveAs()
 
     def saveAs(self):
-        self.txt_path, _ = QFileDialog.getSaveFileName(self)
-        if self.txt_path:
-            return self.saveFile(self.txt_path)
+        fname, _ = QFileDialog.getSaveFileName(self)
+        if fname:
+            return self.saveFile(fname)
 
         return False
     
@@ -222,7 +226,13 @@ class MainWindow(QMainWindow):
         # f.close()
 
     def closeEvent(self, event):
-        event.accept()
+        reply = QMessageBox.question(self, 'Message', '确定退出?',
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.Yes:
+            event.accept()
+        else:
+            event.ignore()
     
     def about(self):
         QMessageBox.about(self, "About Applocation",
