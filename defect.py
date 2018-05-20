@@ -8,7 +8,11 @@ from PyQt5.QtWidgets import (QMainWindow, QTextEdit, QAction, QLineEdit,
 from PyQt5.QtGui import QIcon, QKeySequence, QPixmap
 from PyQt5.QtCore import Qt, QFile, QDataStream, QIODevice, QTextStream
 
-from recognition import test_one_image, test_one_dir
+# from recognition import test_one_image, test_one_dir
+from recognition import RecThread
+from d_setting_win import SettingWindow
+
+import threading
 import re
 import os
 
@@ -165,7 +169,7 @@ class MainWindow(QMainWindow):
         # 里面的参数具体是 题目 初始路径 后缀过滤
         # fname = QFileDialog.getOpenFileName(self, '选取钢板图片', 'C:\\',
         #                                     "Image File(*.jpg *.png *.tif)")
-        fname = QFileDialog.getOpenFileName(self, '选取钢板图片', '/home',
+        fname = QFileDialog.getOpenFileName(self, '选取钢板图片', '/home/hexiang/data/set',
                                             "Image File(*.jpg *.png *.tif)")
 
         if fname[0]:
@@ -185,13 +189,13 @@ class MainWindow(QMainWindow):
 
     def save(self):
         if self.txt_path:
-            return self.saveFile(self.curFile)
+            return self.saveFile(self.txt_path)
         return self.saveAs()
 
     def saveAs(self):
-        fileName, _ = QFileDialog.getSaveFileName(self)
-        if fileName:
-            return self.saveFile(fileName)
+        self.txt_path, _ = QFileDialog.getSaveFileName(self)
+        if self.txt_path:
+            return self.saveFile(self.txt_path)
 
         return False
     
@@ -231,13 +235,20 @@ class MainWindow(QMainWindow):
     def recognition(self):
         # 有线程问题 识别完成后模型的初始化还在,下一次识别报错
         if self.is_dir:
-            result = test_one_dir(self.img_dir)
+            t1 = RecThread(True, self.img_dir)
+            t1.start()
+            t1.join()
+            result = t1.get_result()
             for k, v in result.items():
                 self.bigEditor.append('%s,%s,%s' % (re.split('\\ | /', k)[-1], v[0], v[1]))
         else:
             print(self.img_path)
-            pro, defect_name = test_one_image(self.img_path)
-            # pro, defect_name = 1, "haha"
+            t2 = RecThread(False, self.img_path)
+            t2.start()
+            t2.join()
+
+            pro, defect_name = t2.get_result()
+            # pro, defect_name = t2.
             # self.bigEditor.setPlainText()
             self.bigEditor.append('%s,%s,%s' % (re.split('\\ | /', self.img_path)[-1], pro+1, defect_name))
 
@@ -258,44 +269,7 @@ class MainWindow(QMainWindow):
     def setting_change(self):
         pass
 
-# 设置窗口
-class SettingWindow(QWidget):
-    def __init__(self, parent=None):
-        super(SettingWindow, self).__init__(parent)
-        self.resize(400, 200)
-        self.setWindowTitle('设置')
-        self.setStyleSheet("background: gray")
 
-        self.initUI()
-
-    def initUI(self):
-        glayout = QGridLayout()
-
-        para_label = QLabel('ModlePara:')
-        dropout_label =QLabel('Dropout:')
-
-        para_text = QLineEdit()
-        dropout_text = QLineEdit('1.0')
-        dropout_text.setReadOnly(True)
-
-        sld = QSlider(Qt.Horizontal)
-
-        btn = QPushButton('选择')
-
-        glayout.setVerticalSpacing(10)
-
-        glayout.addWidget(para_label, 1,1,1,2)
-        glayout.addWidget(para_text, 1,3,1,2)
-        glayout.addWidget(btn, 1,5,1,1)
-        glayout.addWidget(dropout_label,2,1,1,2)
-        glayout.addWidget(dropout_text, 2,3,1,1)
-        glayout.addWidget(sld, 2,4,1,2)
-
-        self.setLayout(glayout)
-
-    def handle_click(self):
-        if not self.isVisible():
-            self.show()
 
 
 if __name__ == '__main__':

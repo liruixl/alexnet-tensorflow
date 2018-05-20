@@ -1,6 +1,3 @@
-D2_M_570528_00030.jpg,1,haha
-D2_M_570528_00030.jpg,1,haha
-D2_M_570528_00030.jpg,1,haha
-D2_M_570528_00030.jpg,1,haha
-D2_M_570528_00030.jpg,1,haha
-D2_M_570528_00030.jpg,1,haha
+/home/hexiang/data/set/test_set/4/D1_M_174923_00952.jpg,4,结疤
+/home/hexiang/data/set/test_set/4/D1_M_174923_00952.jpg,4,结疤
+/home/hexiang/data/set/test_set/4/D1_M_174923_00952.jpg,4,结疤

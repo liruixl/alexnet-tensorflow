@@ -6,11 +6,30 @@ from PIL import Image
 import os
 import numpy as np
 import argparse
+from threading import Thread
 
 save_path = '/home/hexiang/data/tflogs/ckpt0219/model_step399ckpt'
 
 classes_name = ['折叠', '压痕', '划伤', '结疤', '氧化铁皮', '黑斑']
 NUM_CLASSES = 6
+
+
+class RecThread(Thread):
+
+    def __init__(self, isdir, path):
+        Thread.__init__(self)
+        self.isdir = isdir
+        self.path = path
+
+    def run(self):
+        if self.isdir:
+            self.result = test_one_dir(self.path)
+        else:
+            self.result = test_one_image(self.path)
+
+    def get_result(self):
+        return self.result
+
 
 
 def test_one_image(img_path):
