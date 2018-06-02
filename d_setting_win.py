@@ -11,6 +11,7 @@ from PyQt5.QtCore import Qt, QFile, QDataStream, QIODevice, QTextStream
 
 # 堆栈对话框 https://www.linuxidc.com/Linux/2012-06/63652p16.htm
 # 调色板 https://blog.csdn.net/rl529014/article/details/51589096
+# 配置读取 configparser
 
 # 设置功能窗口 设置模型参数.
 

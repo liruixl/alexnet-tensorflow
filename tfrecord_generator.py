@@ -11,9 +11,9 @@ IMG_WIDTH = 1000
 IMG_DEPTH = 1
 
 
-def creat_tfrecords(data_path):
+def creat_tfrecords(data_path, tfrecord_savepath=TFRECORDS_NAME):
     # 使用tf.train.Example来定义我们要填入的数据格式，然后使用tf.python_io.TFRecordWriter来写入。
-    writer = tf.python_io.TFRecordWriter(TFRECORDS_NAME)
+    writer = tf.python_io.TFRecordWriter(tfrecord_savepath)
 
     class_name_list = os.listdir(data_path)  # list of classes dirs
     print(class_name_list)
