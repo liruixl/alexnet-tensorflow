@@ -5,7 +5,7 @@ import argparse
 import tensorflow as tf
 
 
-TFRECORDS_NAME = "/home/hexiang/data/224/train224.tfrecords"
+TFRECORDS_NAME = r"/home/hexiang/data/setamply/train_amp.tfrecords"
 IMG_HEIGHT = 1000
 IMG_WIDTH = 1000
 IMG_DEPTH = 1
@@ -76,7 +76,7 @@ def read_and_decode(filename, height, width):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--datapath', default=r'/home/hexiang/data/set/train_set', type=str,
+    parser.add_argument('--datapath', default=r'/home/hexiang/data/setamply/train_set', type=str,
                         help='the dictionary of train or test data')
     # parser.add_argument('--datapath', default=r'/home/hexiang/data/AllSample/train_set', type=str, help='the dictionary of train or test data')
     args, unparsed = parser.parse_known_args()

@@ -20,7 +20,7 @@ class StockWin(QWidget):
         listWidget = QListWidget()
         listWidget.insertItem(0, self.tr("训练"))
         listWidget.insertItem(1, self.tr("数据集"))
-        listWidget.insertItem(2, self.tr("数据集管理"))
+        # listWidget.insertItem(2, self.tr("数据集管理"))
 
         #  训练窗体
         train_widget = QWidget()
@@ -121,6 +121,10 @@ class StockWin(QWidget):
         listWidget.currentRowChanged.connect(stack.setCurrentIndex)
 
 
+    def handle_click(self):
+        if not self.isVisible():
+            self.show()
+
     def choose(self):
 
         dir_name = QFileDialog.getExistingDirectory(self, '保存模型', '/home')
@@ -168,8 +172,10 @@ class StockWin(QWidget):
             return True
         return False
 
-app = QApplication(sys.argv)
-main = StockWin()
-main.show()
-# app.exec_()
-sys.exit(app.exec_())
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    main = StockWin()
+    main.show()
+    # app.exec_()
+    sys.exit(app.exec_())

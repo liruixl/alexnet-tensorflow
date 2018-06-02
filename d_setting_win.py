@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import (QMainWindow, QTextEdit, QAction, QLineEdit,
 from PyQt5.QtGui import QFont, QPixmap, QPalette
 from PyQt5.QtCore import Qt, QFile, QDataStream, QIODevice, QTextStream
 
+import configparser
 
 # 堆栈对话框 https://www.linuxidc.com/Linux/2012-06/63652p16.htm
 # 调色板 https://blog.csdn.net/rl529014/article/details/51589096
@@ -15,16 +16,19 @@ from PyQt5.QtCore import Qt, QFile, QDataStream, QIODevice, QTextStream
 
 # 设置功能窗口 设置模型参数.
 
+conf_path = 'info.conf'
 
 class SettingWindow(QWidget):
     def __init__(self, parent=None):
         super(SettingWindow, self).__init__(parent)
-        self.model_path = ''
+        self.cf = configparser.ConfigParser()
+        self.cf.read(conf_path)
+        self.model_path = self.cf.get('train', 'model_path')
         self.dropout = 1.0
         self.initUI()
 
     def initUI(self):
-        self.resize(400, 200)
+        self.resize(600, 200)
         self.setWindowTitle('设置')
         # self.setStyleSheet("background: gray")
 
@@ -38,7 +42,8 @@ class SettingWindow(QWidget):
         # para_label.setStyleSheet("color:white")
         # dropout_label.setPalette(palette)
 
-        self.para_text = QLineEdit()
+
+        self.para_text = QLineEdit(self.model_path)
         self.dropout_text = QLineEdit('1.0')
         bound_label = QLabel("范围(0,1]")
         bound_label.setFont(QFont("Roman times", 12, QFont.Bold))
@@ -92,9 +97,7 @@ class SettingWindow(QWidget):
         fname, _ = QFileDialog.getOpenFileName(self, '选择参数', '/home')
         if fname:
             print(fname)
-
             self.para_text.setText(fname.split('.')[0])
-
             print(fname.split('.'))
 
         return False
@@ -106,6 +109,8 @@ class SettingWindow(QWidget):
     def ok(self):
         self.model_path = self.para_text.text()
         self.dropout = float(self.dropout_text.text())
+        self.cf.set('train', 'model_path', self.model_path)
+        self.cf.write(open(conf_path, "w"))
         self.close()
         print(self.model_path)
         print(self.dropout)

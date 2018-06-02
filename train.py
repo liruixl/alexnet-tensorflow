@@ -15,21 +15,22 @@ IMG_WIDTH = 224
 IMG_DEPTH = 1
 
 # learning params
-learning_rate = 0.000001
-num_epochs = 2
-batch_size = 15
+learning_rate = 0.00001
+num_epochs = 4
+batch_size = 10
 
 # Network params
 dropout_rate = 0.5
 num_classes = 6  # 1-折叠 2-压痕 3-划伤 4-结疤 5-氧化铁皮 6-黑斑
-MAX_STEP = 400
+MAX_STEP = 2400//batch_size      #  此步数正好循环一圈
+print(MAX_STEP)
 train_layers = ['conv1','conv2', 'conv3', 'conv4', 'conv5','fc8', 'fc7', 'fc6']
 
 # How often we want to write the tf.summary data to disk
 display_step = 10
 
 is_use_ckpt = True
-ckpt_path = '/home/hexiang/data/tflogs/ckpt300/model2_step7999ckpt'  # model1/2 保证迭代训练
+ckpt_path = '/home/hexiang/data/setamply/tflogs/ckpt6/model_step239ckpt'  # model1/2 保证迭代训练
 '''
 Model checkpoint is saved at /home/hexiang/data/tflogs/ckpt300/model_step399ckpt
 Test the model on the entire test_set
@@ -40,9 +41,9 @@ Test the model on the entire test_set
 All examples: 340 Correct: 335 test accuracy = 0.985294
 '''
 
-filewriter_path = '/home/hexiang/data/tflogs/tensorboard0219'
-checkpoint_path = '/home/hexiang/data/tflogs/ckpt0219_2'
-records_train_path = '/home/hexiang/data/224/train224.tfrecords'
+filewriter_path = '/home/hexiang/data/setamply/tflogs/tensorboard'
+checkpoint_path = '/home/hexiang/data/setamply/tflogs/ckpt'
+records_train_path = '/home/hexiang/data/setamply/train_amp.tfrecords'
 records_test_path = '/home/hexiang/data/224/test224.tfrecords'
 
 
@@ -169,7 +170,7 @@ with tf.Session() as sess:
             test_correct = 0
             test_count = 0
 
-            for _ in range(34):  # 347测试图片
+            for _ in range(347//batch_size):  # 347测试图片
                 test_batch_data, test_batch_labels = sess.run([img_test_batch, label_test_batch])
 
                 acc = sess.run(accuracy, feed_dict={x: test_batch_data,

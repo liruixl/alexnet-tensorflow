@@ -10,10 +10,15 @@ from PyQt5.QtCore import Qt, QFile, QDataStream, QIODevice, QTextStream
 
 # from recognition import test_one_image, test_one_dir
 from recognition import RecThread
+
 from d_setting_win import SettingWindow
+from train_win import StockWin
 
 import threading
+import numpy as np
+import matplotlib.pyplot as plt
 import re
+import configparser
 import os
 
 # from recognition import test_one_image
@@ -90,10 +95,14 @@ class MainWindow(QMainWindow):
         clear_btn.clicked.connect(self.clear_result)
         shibie_btn = QPushButton('识别')
         shibie_btn.clicked.connect(self.recognition)
+        tongji_btn = QPushButton('统计图')
+        tongji_btn.clicked.connect(self.tongji)
         btn_layout.addStretch(1)
         btn_layout.addWidget(clear_btn)
         btn_layout.addStretch(1)
         btn_layout.addWidget(shibie_btn)
+        btn_layout.addStretch(2)
+        btn_layout.addWidget(tongji_btn)
         btn_layout.addStretch(1)
 
         self.result_layout.addWidget(nameLabel)
@@ -136,8 +145,13 @@ class MainWindow(QMainWindow):
         self.exitAct = QAction("E&xit", self, shortcut="Ctrl+Q",
                 statusTip="Exit the application", triggered=self.close)
         
-        self.settingAct = QAction("设置", self, 
+        self.settingAct = QAction("模型设置", self,
                 statusTip="设置模型参数")
+
+        self.trainAct = QAction("训练", self,
+                                  statusTip="与训练功能有关")
+
+
         
         self.aboutAct = QAction("关于", self,
                 statusTip="Show the application's About box",
@@ -158,8 +172,9 @@ class MainWindow(QMainWindow):
         fileMenu.addSeparator()
         fileMenu.addAction(self.exitAct)
 
-        setMenu = menubar.addMenu('设置')
+        setMenu = menubar.addMenu('功能')
         setMenu.addAction(self.settingAct)
+        setMenu.addAction(self.trainAct)
 
 
         helpMenu = menubar.addMenu('帮助')
@@ -209,7 +224,7 @@ class MainWindow(QMainWindow):
         qfile = QFile(file_name)
         if not qfile.open(QFile.WriteOnly | QFile.Text):
             QMessageBox.warning(self, "Application",
-                    "Cannot write file %s:\n%s." % re.split('\\ | /',file_name)[-1], qfile.errorString())
+                    "Cannot write file %s:\n%s." % re.split('\\ | /', file_name)[-1], qfile.errorString())
             return False
 
         outf = QTextStream(qfile)
@@ -250,7 +265,7 @@ class MainWindow(QMainWindow):
             t1.join()
             result = t1.get_result()
             for k, v in result.items():
-                self.bigEditor.append('%s,%s,%s' % (re.split('\\ | /', k)[-1], v[0], v[1]))
+                self.bigEditor.append('%s,%s,%s' % (re.split('/', k)[-1], v[0], v[1]))
         else:
             print(self.img_path)
             t2 = RecThread(False, self.img_path)
@@ -260,7 +275,25 @@ class MainWindow(QMainWindow):
             pro, defect_name = t2.get_result()
             # pro, defect_name = t2.
             # self.bigEditor.setPlainText()
-            self.bigEditor.append('%s,%s,%s' % (re.split('\\ | /', self.img_path)[-1], pro+1, defect_name))
+            self.bigEditor.append('%s,%s,%s' % (re.split('/', self.img_path)[-1], pro+1, defect_name))
+
+
+    def tongji(self):
+        ind = np.arange(5)
+        width = 0.35
+
+        a = [1, 2, 3, 4, 5]
+        b = [5, 3, 3, 2, 1]
+
+        plt.xlabel('defect class')
+        plt.ylabel('Number')
+
+        plt.bar(ind, a, width, color='r', label='man')
+        plt.bar(ind + width, b, width, color='y', label='woman')
+
+        plt.title('defect')
+
+        plt.show()
 
     def clear_result(self):
         self.bigEditor.clear()
@@ -279,6 +312,14 @@ class MainWindow(QMainWindow):
     def setting_change(self):
         pass
 
+    def openSetting(self):
+        setting_win = SettingWindow()
+        setting_win.handle_click()  # 显示设置窗口
+        print("设置窗口来了")
+
+    def openTrain(self):
+        pass
+
 
 
 
@@ -287,8 +328,12 @@ if __name__ == '__main__':
 
     app = QApplication(sys.argv)
     mainWin = MainWindow()
-    settingWin = SettingWindow()
-    mainWin.settingAct.triggered.connect(settingWin.handle_click)  # 显示设置窗口
+    setting_win = SettingWindow()
+    mainWin.settingAct.triggered.connect(setting_win.handle_click)  # 显示设置窗口
+
+    train_win = StockWin()
+    mainWin.trainAct.triggered.connect(train_win.handle_click)  # 显示训练窗口
+
     mainWin.show()
     sys.exit(app.exec_())
 
